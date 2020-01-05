@@ -39,8 +39,8 @@ Go will then download, build and install the program for you.
   `dnsolver -d domainlist.txt -o target_ip_list.txt`  
   This writes the unique IPs to a file called **target_ip_list.txt**.
 
-- Parse IP's with Shodan and output open ports:  
-  `dnsolver -d domainslist.txt -o target_ip_list.txt -s`
+- **WIP** - ~~Parse IP's with Shodan and output open ports:  
+  `dnsolver -d domainslist.txt -o target_ip_list.txt -s`~~
 
 ## <a name="example-domain-file"></a>Example domain file
 
