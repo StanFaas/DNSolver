@@ -87,7 +87,7 @@ Each domain should be on a seperate line.
 		case "h", "help":
 			flag.PrintDefaults()
 		case "v", "version":
-			fmt.Println("The version is 0.0.1")
+			fmt.Println("The version is 0.1.1")
 		default:
 			if *domainList == "" {
 				fmt.Println(Red("Oops, you forgot to point me towards your domain file, exiting"))
@@ -111,6 +111,8 @@ func domainParser(domainsFile string) []string {
 
 	fileScanner := bufio.NewScanner(file)
 
+	fmt.Println("Parsing domains..")
+
 	IPs := make([]string, 0)
 	index := 0
 	for fileScanner.Scan() {
@@ -123,7 +125,7 @@ func domainParser(domainsFile string) []string {
 
 		if err != nil {
 			fmt.Println("Ip for", domain)
-			fmt.Println(Red("No IP found..\n"))
+			fmt.Println(Red("No IP found.."))
 			continue
 		}
 
