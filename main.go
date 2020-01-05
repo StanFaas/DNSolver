@@ -2,42 +2,50 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
-	"os/exec"
 
 	"github.com/common-nighthawk/go-figure"
 	. "github.com/logrusorgru/aurora"
+	"github.com/ns3777k/go-shodan/shodan"
 )
 
 func main() {
-	iParser := figure.NewFigure("iparser", "poison", true)
-	iParser.Print()
-	fmt.Printf("\niParser%56.17s\n\n", "made by StanFaas")
+	fmt.Printf("\n")
+	DNSolver := figure.NewFigure("DNSolver", "kban", true)
+	DNSolver.Print()
+	fmt.Printf("DNS|resolver%54.17s\n\n", "made by StanFaas")
 
 	fmt.Println(`
-iParser resolves all the IPs for the domains specified in a file.
+DNSolver resolves all the IPs for the domains specified in a file.
 Each domain should be on a seperate line.
 	`)
 
 	flag.Bool("h", false, "displays all options")
 	flag.Bool("v", false, "displays the current version")
+	flag.Bool("s", false, "Pulls data from Shodan, to see if the DNS is vulnerable")
 	var domainList = flag.String("d", "", "file path to domain list [*Required]")
 	var outputFile = flag.String("o", "", "file path to output ip list to")
 	flag.Parse()
 
-	if *domainList == "" {
-		fmt.Println(Red("Oops, you forgot to point me towards your domain file, exiting"))
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
 	var uniqueIPs []string
+
 	flag.Visit(func(f *flag.Flag) {
 		flagValue := f.Value.String()
 		switch f.Name {
+		case "s", "shodan":
+			client := shodan.NewEnvClient(nil)
+			dns, err := client.GetDNSResolve(context.Background(), []string{"google.com", "ya.ru"})
+
+			if err != nil {
+				log.Panic(err)
+			} else {
+				log.Println(dns["google.com"])
+			}
 		case "d", "domains":
 			fmt.Println("Checking for file..")
 			if fileExists(flagValue) {
@@ -81,7 +89,11 @@ Each domain should be on a seperate line.
 		case "v", "version":
 			fmt.Println("The version is 0.0.1")
 		default:
-			fmt.Println("No argument passed, use `IParser -h` for help")
+			if *domainList == "" {
+				fmt.Println(Red("Oops, you forgot to point me towards your domain file, exiting"))
+				flag.PrintDefaults()
+				os.Exit(1)
+			}
 		}
 	})
 }
@@ -103,9 +115,7 @@ func domainParser(domainsFile string) []string {
 	index := 0
 	for fileScanner.Scan() {
 		domain := fileScanner.Text()
-		command := fmt.Sprintf("ping -n -q -c1 %s | head -1 | grep -Eo '[0-9.]{4,}'", domain)
-		cmd := exec.Command("/bin/sh", "-c", command)
-		ip, err := cmd.Output()
+		ip, err := net.LookupHost(domain)
 
 		if len(fileScanner.Text()) == 0 {
 			continue
@@ -118,8 +128,8 @@ func domainParser(domainsFile string) []string {
 		}
 
 		fmt.Println("Ip for", domain)
-		fmt.Println(Green(string(ip)))
-		IPs = append(IPs, string(ip))
+		fmt.Println(Green(ip[0]))
+		IPs = append(IPs, ip[0])
 		index++
 	}
 
@@ -128,12 +138,12 @@ func domainParser(domainsFile string) []string {
 		log.Fatal(Red(err))
 	}
 
-	fmt.Println("Found", len(IPs), "IPs..")
+	fmt.Println("\nFound", len(IPs), "IPs..")
 	uniqueIPs := generateUniqueIPs(IPs)
 	duplicates := len(IPs) - len(uniqueIPs)
 	if duplicates > 0 {
-		fmt.Println("but also found", Yellow(duplicates), "duplicates, removing them now..")
-		fmt.Println("Removed removed them.", Green(len(uniqueIPs)), Green("unique IPs remaining"))
+		fmt.Println("but also found", Yellow(duplicates), "duplicates.. deduping now..")
+		fmt.Println("Removed them.", Green(len(uniqueIPs)), Green("unique IPs remaining"), ".")
 	}
 
 	return uniqueIPs
@@ -161,7 +171,7 @@ func writeFile(outputFile string, ipArray []string) {
 	}
 	defer file.Close()
 	for _, value := range ipArray {
-		fmt.Fprint(file, value)
+		fmt.Fprintln(file, value)
 	}
 	fmt.Println(Green("Jobs done!"))
 	fmt.Println("Follow me on Twitter: @StanFaas")
