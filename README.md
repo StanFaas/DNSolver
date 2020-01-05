@@ -59,7 +59,7 @@ thisisnotasubdomain.facebook.com
 
 ## <a name="generate-domain-file"></a>Generate domain file
 
-To gerenate a file with domains I would recommend [AssetFinder](https://github.com/tomnomnom/assetfinder) by [TomNomNom](https://github.com/tomnomnom)
+To generate a file with domains I would recommend [AssetFinder](https://github.com/tomnomnom/assetfinder) by [TomNomNom](https://github.com/tomnomnom)
 
 ## <a name="todo"></a>Todo
 
